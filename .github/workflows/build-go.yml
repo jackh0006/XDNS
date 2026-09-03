@@ -299,7 +299,7 @@ jobs:
           cp assets/xdns.png dist/xdns.png || true
           cp docs/ENGINEERING_CHANGES.md dist/ENGINEERING_CHANGES.md || true
           if [[ "${{ matrix.go_os }}" == "linux" ]]; then
-            cp client_linux_install.sh dist/client_linux_install.sh || true
+            cp client_linux_install.sh client_linux_quick_install.sh dist/ || true
             cp server_linux_install.sh server_docker_install.sh Dockerfile docker-entrypoint.sh compose.yaml dist/ || true
           fi
 
@@ -599,7 +599,9 @@ jobs:
           [ -f "${CLIENT_README_EN}" ] && CLIENT_FILES+=( "${CLIENT_README_EN}" )
           [ -f "${CLIENT_README_FA}" ] && CLIENT_FILES+=( "${CLIENT_README_FA}" )
           [ -f "${CLIENT_LOGO}" ] && CLIENT_FILES+=( "${CLIENT_LOGO}" )
-          [ -f "client_linux_install.sh" ] && CLIENT_FILES+=( "client_linux_install.sh" )
+          for install_file in client_linux_install.sh client_linux_quick_install.sh; do
+            [ -f "$install_file" ] && CLIENT_FILES+=( "$install_file" )
+          done
 
           SERVER_FILES=( "${SERVER_EXE_NAME}" "${SERVER_TOML}" )
           SERVER_PRESETS=( server_config.*.toml )

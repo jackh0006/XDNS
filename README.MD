@@ -51,6 +51,20 @@ the [complete setup guide](#complete-setup-guide) to configure DNS delegation
 and the client. Review a script before running it with
 `curl -fsSL URL | less` if your operating procedure requires it.
 
+### Linux and Termux client quick install
+
+The client installer detects AMD64, x86, ARM64, ARMv5/v6/v7, MIPS, and RISC-V
+Linux releases automatically. It also works in Termux without `sudo`:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/jackh0006/XDNS/main/client_linux_quick_install.sh | sh
+```
+
+It installs to `~/.local/share/XDNS` (or `/opt/XDNS-client` when run as root on
+normal Linux). Set `XDNS_CLIENT_DIR=/your/path` before the command to choose a
+different directory. Edit the generated client configuration and resolver list
+before starting the client.
+
 ## Start here
 
 | I want to… | Go to |

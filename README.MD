@@ -65,6 +65,15 @@ normal Linux). Set `XDNS_CLIENT_DIR=/your/path` before the command to choose a
 different directory. Edit the generated client configuration and resolver list
 before starting the client.
 
+### Start the Linux client
+
+```bash
+cd ~/.local/share/XDNS
+./XDNS-client --config client_config.toml
+```
+
+It exposes a local SOCKS5 proxy at `127.0.0.1:18000`. Press `Ctrl+C` to stop it.
+
 ## Start here
 
 | I want to… | Go to |
@@ -110,12 +119,13 @@ functional base, and the complete technical rationale is documented in
 [Engineering changes](docs/ENGINEERING_CHANGES.md). The comparison below
 separates the lineage honestly.
 
-| Area | MasterDnsVPN / StormDNS baseline | CottenDNS contribution inherited by XDNS | XDNS change |
+| Area | MasterDnsVPN / StormDNS baseline | CottenDNS contribution inherited by XDNS | XDNS-specific, verified change |
 | --- | --- | --- | --- |
-| Wire compatibility | Original DNS-tunnel framing and ARQ foundation | Compatibility retained while expanding supported transports and server behavior | Byte-level MasterDNS conformance tests remain part of XDNS validation. |
-| Path reliability | Resolver balancing and retransmission foundation | Per-resolver health, adaptive duplication, FEC, replay, MTU discovery, and path control | Duplicate packets prefer distinct configured domains by default, where available. This adds no copies or traffic; it makes existing redundancy less likely to share a single domain failure. |
-| DNS carriers | Traditional DNS tunnel transport | UDP/TCP DNS, DoT, DoH, IPv6, and matching DNS record channels | Same transport capability, maintained under an independent XDNS release line. |
-| Public-server operation | Basic tunnel deployment | Health/metrics, admission limits, fairness, container deployment, installers, and configuration presets | Repository-owned Quick Install, release URLs, CI, and package naming point to XDNS. |
+| 🔗 Wire compatibility | Original DNS-tunnel framing and ARQ foundation | Compatibility retained while expanding supported transports and server behavior | Byte-level MasterDNS conformance tests run in XDNS validation, while the server auto-detects legacy and native session headers. |
+| 🛡️ Path reliability | Resolver balancing and retransmission foundation | Per-resolver health, adaptive duplication, FEC, replay, MTU discovery, and path control | Duplicate packets prefer distinct configured domains by default. It adds no copies or bandwidth, but reduces correlated domain-path failure when multiple domains exist. |
+| 📡 DNS carriers | Traditional DNS tunnel transport | UDP/TCP DNS, DoT, DoH, IPv6, and matching DNS record channels | The same carriers remain available under XDNS. DoT/DoH are opt-in; they can help where plain DNS is fingerprinted, but are not claimed to bypass every DPI system. |
+| ⚡ Connection continuity | Basic connect/retry behavior | Adaptive resolver health and transport fallback | The installer now survives a busy legacy metrics port by selecting a free local port (`9090`–`9099`), so a safe reinstall does not crash-loop XDNS. |
+| 🧰 Operations | Basic deployment | Health/metrics, admission limits, fairness, container deployment, installers, and presets | XDNS-owned Quick Install URLs, Linux/Termux architecture detection, safe config rollback on failed installation, and an explicit full uninstaller are published here. |
 
 ### Default domain-diverse reliability
 

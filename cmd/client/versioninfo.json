@@ -20,11 +20,11 @@
     },
     "StringFileInfo": {
         "Comments": "XDNS Client",
-        "CompanyName": "tajirax",
+        "CompanyName": "XDNS contributors",
         "FileDescription": "XDNS Client",
         "FileVersion": "1.0.0.0",
         "InternalName": "XDNS_Client",
-        "LegalCopyright": "Copyright (c) 2026 tajirax",
+        "LegalCopyright": "Copyright (c) 2026 XDNS contributors",
         "LegalTrademarks": "",
         "OriginalFilename": "XDNS_Client.exe",
         "ProductName": "XDNS",

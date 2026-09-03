@@ -763,9 +763,15 @@ jobs:
       - name: Build unified SHA256SUMS for release assets
         run: |
           set -euo pipefail
-          find release_assets -type f \( -name '*.zip' -o -name '*.tar.gz' \) -print0 \
-            | sort -z \
-            | xargs -0 sha256sum > release_assets/SHA256SUMS.txt
+          checksum_file="release_assets/SHA256SUMS.txt"
+          : > "$checksum_file"
+          while IFS= read -r -d '' asset; do
+            # GitHub exposes each uploaded asset by basename. Do not leak the
+            # runner's artifact-directory layout into the checksum manifest.
+            printf '%s  %s\n' \
+              "$(sha256sum "$asset" | awk '{print $1}')" \
+              "$(basename "$asset")" >> "$checksum_file"
+          done < <(find release_assets -type f \( -name '*.zip' -o -name '*.tar.gz' \) -print0 | sort -z)
 
       - name: Fail if no artifacts downloaded
         run: |

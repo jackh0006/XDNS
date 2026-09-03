@@ -99,10 +99,10 @@ select_release_artifact() {
 
   local base_url
   if [[ -n "$version" ]]; then
-    base_url="https://github.com/WhiteDNS/XDNS/releases/download/${version}"
+    base_url="https://github.com/jackh0006/XDNS/releases/download/${version}"
     log_info "Targeting XDNS release: ${version}"
   else
-    base_url="https://github.com/WhiteDNS/XDNS/releases/latest/download"
+    base_url="https://github.com/jackh0006/XDNS/releases/latest/download"
   fi
 
   case "$arch" in
@@ -183,7 +183,7 @@ print_usage() {
 XDNS Server Linux Installer
 
 Usage:
-  bash <(curl -Ls https://raw.githubusercontent.com/WhiteDNS/XDNS/main/server_linux_install.sh) [OPTIONS]
+  bash <(curl -Ls https://raw.githubusercontent.com/jackh0006/XDNS/main/server_linux_install.sh) [OPTIONS]
 
 Options:
   -v, --version <VERSION>   Install a specific XDNS release (tag), e.g. v1.2.3.
@@ -201,20 +201,20 @@ Options:
 
 Examples:
   # Install the latest release (default behavior):
-  bash <(curl -Ls https://raw.githubusercontent.com/WhiteDNS/XDNS/main/server_linux_install.sh)
+  bash <(curl -Ls https://raw.githubusercontent.com/jackh0006/XDNS/main/server_linux_install.sh)
 
   # Install a specific release version:
-  bash <(curl -Ls https://raw.githubusercontent.com/WhiteDNS/XDNS/main/server_linux_install.sh) --version v1.2.3
+  bash <(curl -Ls https://raw.githubusercontent.com/jackh0006/XDNS/main/server_linux_install.sh) --version v1.2.3
 
   # Upgrade an existing server in one command:
-  bash <(curl -Ls https://raw.githubusercontent.com/WhiteDNS/XDNS/main/server_linux_install.sh) --upgrade
+  bash <(curl -Ls https://raw.githubusercontent.com/jackh0006/XDNS/main/server_linux_install.sh) --upgrade
 
   # Local/offline install for testing:
   python build.py
   sudo bash server_linux_install.sh --local
 
   # Uninstall XDNS:
-  bash <(curl -Ls https://raw.githubusercontent.com/WhiteDNS/XDNS/main/server_linux_install.sh) --uninstall
+  bash <(curl -Ls https://raw.githubusercontent.com/jackh0006/XDNS/main/server_linux_install.sh) --uninstall
 USAGE
 }
 
@@ -1039,7 +1039,7 @@ echo -e "  ${YELLOW}>${NC} Stop:    systemctl stop XDNS"
 echo -e "  ${YELLOW}>${NC} Restart: systemctl restart XDNS"
 echo -e "  ${YELLOW}>${NC} Logs:    journalctl -u XDNS -f"
 echo -e "  ${YELLOW}>${NC} Health:  curl http://127.0.0.1:9090/healthz"
-echo -e "  ${YELLOW}>${NC} Upgrade: bash <(curl -Ls https://raw.githubusercontent.com/WhiteDNS/XDNS/main/server_linux_install.sh) --upgrade"
+echo -e "  ${YELLOW}>${NC} Upgrade: bash <(curl -Ls https://raw.githubusercontent.com/jackh0006/XDNS/main/server_linux_install.sh) --upgrade"
 echo -e "\n${BOLD}Files:${NC}"
 echo -e "  ${YELLOW}>${NC} ${INSTALL_DIR}/server_config.toml"
 echo -e "  ${YELLOW}>${NC} ${INSTALL_DIR}/encrypt_key.txt"

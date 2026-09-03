@@ -10,8 +10,8 @@
 
 <p align="center">
   <a href="LICENSE"><img alt="MIT License" src="https://img.shields.io/badge/license-MIT-16a34a?style=flat-square"></a>
-  <a href="https://github.com/WhiteDNS/XDNS/actions/workflows/build-go.yml"><img alt="Build and release" src="https://github.com/WhiteDNS/XDNS/actions/workflows/build-go.yml/badge.svg"></a>
-  <a href="https://github.com/WhiteDNS/XDNS/releases/latest"><img alt="Latest release" src="https://img.shields.io/github/v/release/WhiteDNS/XDNS?style=flat-square"></a>
+  <a href="https://github.com/jackh0006/XDNS/actions/workflows/build-go.yml"><img alt="Build and release" src="https://github.com/jackh0006/XDNS/actions/workflows/build-go.yml/badge.svg"></a>
+  <a href="https://github.com/jackh0006/XDNS/releases/latest"><img alt="Latest release" src="https://img.shields.io/github/v/release/jackh0006/XDNS?style=flat-square"></a>
   <img alt="Go" src="https://img.shields.io/badge/Go-1.25-00ADD8?style=flat-square&logo=go&logoColor=white">
   <img alt="DNS transports" src="https://img.shields.io/badge/DNS-UDP%20%7C%20TCP%20%7C%20DoT%20%7C%20DoH-4f46e5?style=flat-square">
 </p>
@@ -27,7 +27,7 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/WhiteDNS/XDNS/releases/latest">Download</a> ·
+  <a href="https://github.com/jackh0006/XDNS/releases/latest">Download</a> ·
   <a href="docs/ENGINEERING_CHANGES.md">Engineering notes</a> ·
   <a href="CONFIG_PRESETS.md">Configuration presets</a> ·
   <a href="https://t.me/whitedns">Telegram</a>
@@ -35,6 +35,21 @@
 
 > [!IMPORTANT]
 > XDNS exists for networks where ordinary VPNs and proxies are blocked but a usable DNS path remains. DNS tunneling is inherently slower than a normal VPN. The goal is maximum usable speed and continuity under censorship—not unrealistic clean-network throughput claims.
+
+## Quick install
+
+On an Ubuntu/Debian VPS, first delegate a subdomain such as `v.example.com` to
+the server, allow both UDP and TCP port 53 in your provider firewall, then run:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/jackh0006/XDNS/main/server_linux_install.sh | sudo bash
+```
+
+The guided installer downloads the matching XDNS release, creates `/opt/XDNS`,
+configures and starts `XDNS.service`, and prints the client key. Continue with
+the [complete setup guide](#complete-setup-guide) to configure DNS delegation
+and the client. Review a script before running it with
+`curl -fsSL URL | less` if your operating procedure requires it.
 
 ## Start here
 
@@ -301,7 +316,7 @@ Create a stable installation directory and run the latest installer:
 ```bash
 sudo install -d -m 0755 /opt/XDNS
 cd /opt/XDNS
-curl -fsSL https://raw.githubusercontent.com/WhiteDNS/XDNS/main/server_linux_install.sh | sudo bash
+curl -fsSL https://raw.githubusercontent.com/jackh0006/XDNS/main/server_linux_install.sh | sudo bash
 ```
 
 When prompted, enter the delegated tunnel domain—for example `v.example.com`. The installer:
@@ -449,7 +464,7 @@ traffic reaches XDNS without Docker NAT overhead.
 Replace `v.example.com` with the delegated tunnel domain:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/WhiteDNS/XDNS/main/server_docker_install.sh \
+curl -fsSL https://raw.githubusercontent.com/jackh0006/XDNS/main/server_docker_install.sh \
   | sudo sh -s -- --domain v.example.com
 ```
 
@@ -515,7 +530,7 @@ Upgrade to the newest published image without replacing the active
 configuration or encryption key:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/WhiteDNS/XDNS/main/server_docker_install.sh \
+curl -fsSL https://raw.githubusercontent.com/jackh0006/XDNS/main/server_docker_install.sh \
   | sudo sh -s -- --upgrade
 ```
 
@@ -557,7 +572,7 @@ disconnects clients that use it.
 
 ### Step 4 — Download the correct client
 
-Open [Releases](https://github.com/WhiteDNS/XDNS/releases/latest) and choose the archive matching the client machine:
+Open [Releases](https://github.com/jackh0006/XDNS/releases/latest) and choose the archive matching the client machine:
 
 | Platform | Typical archive |
 | --- | --- |
@@ -667,7 +682,7 @@ Upgrade the server in place:
 
 ```bash
 cd /opt/XDNS
-curl -fsSL https://raw.githubusercontent.com/WhiteDNS/XDNS/main/server_linux_install.sh | sudo bash -s -- --upgrade
+curl -fsSL https://raw.githubusercontent.com/jackh0006/XDNS/main/server_linux_install.sh | sudo bash -s -- --upgrade
 ```
 
 The upgrade path preserves the active configuration and encryption key and rolls back if the new service does not become healthy. Still keep an external backup:
@@ -686,7 +701,7 @@ Install a specific release:
 
 ```bash
 cd /opt/XDNS
-curl -fsSL https://raw.githubusercontent.com/WhiteDNS/XDNS/main/server_linux_install.sh | sudo bash -s -- --version vYYYY.MM.DD.HHMMSS-commithash
+curl -fsSL https://raw.githubusercontent.com/jackh0006/XDNS/main/server_linux_install.sh | sudo bash -s -- --version vYYYY.MM.DD.HHMMSS-commithash
 ```
 
 Install a locally built server without downloading:
@@ -699,14 +714,14 @@ sudo bash server_linux_install.sh --local
 Show installer options:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/WhiteDNS/XDNS/main/server_linux_install.sh | bash -s -- --help
+curl -fsSL https://raw.githubusercontent.com/jackh0006/XDNS/main/server_linux_install.sh | bash -s -- --help
 ```
 
 Uninstall the systemd service and files managed by the installer:
 
 ```bash
 cd /opt/XDNS
-curl -fsSL https://raw.githubusercontent.com/WhiteDNS/XDNS/main/server_linux_install.sh | sudo bash -s -- --uninstall
+curl -fsSL https://raw.githubusercontent.com/jackh0006/XDNS/main/server_linux_install.sh | sudo bash -s -- --uninstall
 ```
 
 Back up `server_config.toml` and `encrypt_key.txt` before uninstalling if the deployment may be restored later.
@@ -915,4 +930,4 @@ Special thanks and full historical credit:
 - **NullRoute1970** — [StormDNS](https://github.com/nullroute1970/StormDNS), the direct upstream derivative and continued engineering lineage.
 - All contributors, testers, resolver operators, and users reporting behavior from censored networks.
 
-Project links: [issues](https://github.com/WhiteDNS/XDNS/issues) · [pull requests](https://github.com/WhiteDNS/XDNS/pulls) · [releases](https://github.com/WhiteDNS/XDNS/releases)
+Project links: [issues](https://github.com/jackh0006/XDNS/issues) · [pull requests](https://github.com/jackh0006/XDNS/pulls) · [releases](https://github.com/jackh0006/XDNS/releases)

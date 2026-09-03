@@ -1,7 +1,7 @@
 #!/usr/bin/env sh
 set -eu
 
-repo="WhiteDNS/XDNS"
+repo="jackh0006/XDNS"
 install_dir="${XDNS_DOCKER_DIR:-/opt/XDNS-docker}"
 domain="${XDNS_DOMAIN:-}"
 upgrade=false

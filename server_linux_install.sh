@@ -695,9 +695,32 @@ stop_existing_XDNS_service() {
   done <<< "$(get_port53_pids)"
 }
 
+select_metrics_address() {
+  # Metrics are strictly local, so a legacy service using 9090 must not make a
+  # replacement XDNS install fail. Keep a caller-supplied address unchanged;
+  # otherwise choose the first free loopback port in the conventional range.
+  METRICS_ADDRESS="${XDNS_METRICS_ADDRESS:-127.0.0.1:9090}"
+  if [[ -n "${XDNS_METRICS_ADDRESS:-}" ]]; then
+    return 0
+  fi
+
+  local port
+  for port in 9090 9091 9092 9093 9094 9095 9096 9097 9098 9099; do
+    if ! ss -H -ltn "sport = :${port}" 2>/dev/null | grep -q .; then
+      METRICS_ADDRESS="127.0.0.1:${port}"
+      if [[ "$port" != 9090 ]]; then
+        log_warn "Metrics port 9090 is already used; XDNS will use ${METRICS_ADDRESS}."
+      fi
+      return 0
+    fi
+  done
+  log_error "No free local metrics port found in 9090-9099. Set XDNS_METRICS_ADDRESS to a free loopback address and retry."
+}
+
 log_header "Stopping Existing XDNS"
 cleanup_legacy_cottenpickdns
 stop_existing_XDNS_service
+select_metrics_address
 
 log_header "Managing Network Ports (Port 53)"
 remove_port53_forward_rules
@@ -930,7 +953,7 @@ fi
 
 log_header "Security Initialization"
 log_info "Starting server once to generate encryption key..."
-./"$EXECUTABLE" > "$TMP_LOG" 2>&1 &
+./"$EXECUTABLE" -metrics-address "$METRICS_ADDRESS" > "$TMP_LOG" 2>&1 &
 APP_PID=$!
 READY=false
 for _ in {1..10}; do
@@ -987,7 +1010,7 @@ StartLimitIntervalSec=0
 [Service]
 Type=simple
 WorkingDirectory=$INSTALL_DIR
-ExecStart=$INSTALL_DIR/$EXECUTABLE -config $INSTALL_DIR/server_config.toml -metrics-address 127.0.0.1:9090
+ExecStart=$INSTALL_DIR/$EXECUTABLE -config $INSTALL_DIR/server_config.toml -metrics-address $METRICS_ADDRESS
 Restart=always
 RestartSec=3
 User=root
@@ -1012,7 +1035,7 @@ systemctl restart XDNS
 
 HEALTHY=false
 for _ in {1..30}; do
-  if systemctl is-active --quiet XDNS && curl -fsS --max-time 2 http://127.0.0.1:9090/healthz >/dev/null 2>&1; then
+  if systemctl is-active --quiet XDNS && curl -fsS --max-time 2 "http://${METRICS_ADDRESS}/healthz" >/dev/null 2>&1; then
     HEALTHY=true
     break
   fi
@@ -1056,7 +1079,7 @@ echo -e "  ${YELLOW}>${NC} Start:   systemctl start XDNS"
 echo -e "  ${YELLOW}>${NC} Stop:    systemctl stop XDNS"
 echo -e "  ${YELLOW}>${NC} Restart: systemctl restart XDNS"
 echo -e "  ${YELLOW}>${NC} Logs:    journalctl -u XDNS -f"
-echo -e "  ${YELLOW}>${NC} Health:  curl http://127.0.0.1:9090/healthz"
+echo -e "  ${YELLOW}>${NC} Health:  curl http://${METRICS_ADDRESS}/healthz"
 echo -e "  ${YELLOW}>${NC} Upgrade: bash <(curl -Ls https://raw.githubusercontent.com/jackh0006/XDNS/main/server_linux_install.sh) --upgrade"
 echo -e "\n${BOLD}Files:${NC}"
 echo -e "  ${YELLOW}>${NC} ${INSTALL_DIR}/server_config.toml"

@@ -34,7 +34,7 @@ func TestCarrierSelector_DropsBlockedCarrierAndReexplores(t *testing.T) {
 			qt := s.next()
 			counts[qt]++
 			if qt == txt {
-				s.recordSuccess(txt)
+				s.recordSuccess(txt, 25*time.Millisecond)
 			}
 		}
 		return counts
@@ -74,10 +74,10 @@ func TestCarrierSelector_IsolatesBlockedCarrierByPath(t *testing.T) {
 	s := newCarrierSelector([]uint16{Enums.DNS_RECORD_TYPE_TXT, Enums.DNS_RECORD_TYPE_CNAME}, func() time.Time { return now })
 	for i := 0; i < 200; i++ {
 		if qt := s.nextForPath("blocked"); qt == Enums.DNS_RECORD_TYPE_TXT {
-			s.recordSuccessForPath("blocked", qt)
+			s.recordSuccessForPath("blocked", qt, 25*time.Millisecond)
 		}
 		qt := s.nextForPath("clean")
-		s.recordSuccessForPath("clean", qt)
+		s.recordSuccessForPath("clean", qt, 25*time.Millisecond)
 	}
 	now = now.Add(carrierEvalInterval + time.Second)
 	blockedCNAME, cleanCNAME := 0, 0
@@ -91,5 +91,33 @@ func TestCarrierSelector_IsolatesBlockedCarrierByPath(t *testing.T) {
 	}
 	if blockedCNAME >= cleanCNAME/2 {
 		t.Fatalf("blocked carrier leaked across path scores: blocked=%d clean=%d", blockedCNAME, cleanCNAME)
+	}
+}
+
+func TestCarrierSelector_PrefersMeasuredFastCarrierWithoutStarvingAlternates(t *testing.T) {
+	now := time.Now()
+	s := newCarrierSelector([]uint16{Enums.DNS_RECORD_TYPE_TXT, Enums.DNS_RECORD_TYPE_HTTPS}, func() time.Time { return now })
+	txt := uint16(Enums.DNS_RECORD_TYPE_TXT)
+	https := uint16(Enums.DNS_RECORD_TYPE_HTTPS)
+
+	// Both carriers deliver, but TXT consistently returns four times faster.
+	for i := 0; i < 200; i++ {
+		s.recordSuccess(txt, 25*time.Millisecond)
+		s.recordSuccess(https, 100*time.Millisecond)
+		s.sent[0].Add(1)
+		s.sent[1].Add(1)
+	}
+	now = now.Add(carrierEvalInterval + time.Second)
+	s.maybeEval()
+
+	counts := map[uint16]int{}
+	for i := 0; i < 100; i++ {
+		counts[s.next()]++
+	}
+	if counts[txt] <= counts[https] {
+		t.Fatalf("fast carrier was not preferred: TXT=%d HTTPS=%d", counts[txt], counts[https])
+	}
+	if counts[https] == 0 {
+		t.Fatal("working alternate must remain in exploration rotation")
 	}
 }

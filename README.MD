@@ -126,6 +126,7 @@ separates the lineage honestly.
 | 🔗 Wire compatibility | Original DNS-tunnel framing and ARQ foundation | Compatibility retained while expanding supported transports and server behavior | Byte-level MasterDNS conformance tests run in XDNS validation, while the server auto-detects legacy and native session headers. |
 | 🛡️ Path reliability | Resolver balancing and retransmission foundation | Per-resolver health, adaptive duplication, FEC, replay, MTU discovery, and path control | Duplicate packets prefer distinct configured domains by default. It adds no copies or bandwidth, but reduces correlated domain-path failure when multiple domains exist. |
 | 📡 DNS carriers | Traditional DNS tunnel transport | UDP/TCP DNS, DoT, DoH, IPv6, and matching DNS record channels | The same carriers remain available under XDNS. DoT/DoH are opt-in; they can help where plain DNS is fingerprinted, but are not claimed to bypass every DPI system. |
+| 📈 Carrier quality control | Fixed record-type behavior | Adaptive carrier rotation removes record types that are fully blocked | XDNS measures delivery **and response time** per `(resolver, record type)`, favors a mature fast carrier by up to 4:1, and still periodically uses every working alternate so a changing filter can be detected. This is client-only and preserves the MasterDNS wire format. |
 | ⚡ Connection continuity | Basic connect/retry behavior | Adaptive resolver health and transport fallback | The installer now survives a busy legacy metrics port by selecting a free local port (`9090`–`9099`), so a safe reinstall does not crash-loop XDNS. |
 | 🧰 Operations | Basic deployment | Health/metrics, admission limits, fairness, container deployment, installers, and presets | XDNS-owned Quick Install URLs, Linux/Termux architecture detection, safe config rollback on failed installation, and an explicit full uninstaller are published here. |
 
@@ -197,6 +198,8 @@ With these settings the client automatically:
 
 - tries UDP and keeps it while it remains useful;
 - compares UDP and TCP/53 separately for every resolver;
+- learns which DNS record type is fastest on each resolver without abandoning
+  working alternates;
 - switches only the failing or materially slower path;
 - uses packet size, MTU, RTT, loss, direction, and confidence when routing;
 - keeps alternate paths warm with a congestion-aware background budget;

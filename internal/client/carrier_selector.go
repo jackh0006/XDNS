@@ -31,6 +31,11 @@ const (
 	// A sampled carrier is dropped from rotation when its success rate falls below
 	// this (e.g. blocked or fully poisoned → responses stop coming back).
 	carrierMinSuccessRate = 0.15
+	// carrierMaxWeight bounds preference for a mature fast carrier. The lower
+	// weight floor keeps every usable carrier in periodic rotation, which is
+	// important when a censor changes policy after the initial scan.
+	carrierMaxWeight = 4
+	carrierRTTFloor  = 20 * time.Millisecond
 )
 
 type carrierSelector struct {
@@ -41,6 +46,11 @@ type carrierSelector struct {
 	// Per-type send/success counters, halved on each eval so stale data fades.
 	sent    []atomic.Uint64
 	success []atomic.Uint64
+	// rttEWMA stores an exponentially weighted response time in nanoseconds.
+	// It is deliberately per carrier and per resolver path (via forPath), so a
+	// slow HTTPS answer through one resolver cannot demote that record type on a
+	// different resolver where it is fast.
+	rttEWMA []atomic.Int64
 
 	active       atomic.Pointer[[]int] // type indices currently in rotation
 	lastEvalNano atomic.Int64
@@ -58,6 +68,7 @@ func newCarrierSelector(types []uint16, nowFn func() time.Time) *carrierSelector
 		typeIdx: make(map[uint16]int, len(norm)),
 		sent:    make([]atomic.Uint64, len(norm)),
 		success: make([]atomic.Uint64, len(norm)),
+		rttEWMA: make([]atomic.Int64, len(norm)),
 		nowFn:   nowFn,
 		paths:   make(map[string]*carrierSelector),
 	}
@@ -100,10 +111,10 @@ func (s *carrierSelector) nextForPath(path string) uint16 {
 	return s.forPath(path).next()
 }
 
-func (s *carrierSelector) recordSuccessForPath(path string, qType uint16) {
-	s.recordSuccess(qType)
+func (s *carrierSelector) recordSuccessForPath(path string, qType uint16, rtt time.Duration) {
+	s.recordSuccess(qType, rtt)
 	if path != "" {
-		s.forPath(path).recordSuccess(qType)
+		s.forPath(path).recordSuccess(qType, rtt)
 	}
 }
 
@@ -136,12 +147,27 @@ func (s *carrierSelector) next() uint16 {
 }
 
 // recordSuccess credits a carrier when one of its responses decodes successfully.
-func (s *carrierSelector) recordSuccess(qType uint16) {
+func (s *carrierSelector) recordSuccess(qType uint16, rtt time.Duration) {
 	if s == nil {
 		return
 	}
 	if i, ok := s.typeIdx[qType]; ok {
 		s.success[i].Add(1)
+		if rtt <= 0 {
+			return
+		}
+		// CAS makes the hot response path lock-free. A 7:1 EWMA smooths normal
+		// DNS jitter without hiding a sustained transport regression.
+		next := rtt.Nanoseconds()
+		for {
+			old := s.rttEWMA[i].Load()
+			if old > 0 {
+				next = (old*7 + next) / 8
+			}
+			if s.rttEWMA[i].CompareAndSwap(old, next) {
+				return
+			}
+		}
 	}
 }
 
@@ -162,8 +188,15 @@ func (s *carrierSelector) maybeEval() {
 }
 
 func (s *carrierSelector) evalLocked() {
-	next := make([]int, 0, len(s.types))
+	next := make([]int, 0, len(s.types)*carrierMaxWeight)
 	bestIdx, bestRate := 0, -1.0
+	bestScore := 0.0
+	type carrierScore struct {
+		index int
+		score float64
+		keep  bool
+	}
+	scores := make([]carrierScore, 0, len(s.types))
 	for i := range s.types {
 		sent := s.sent[i].Load()
 		succ := s.success[i].Load()
@@ -172,8 +205,24 @@ func (s *carrierSelector) evalLocked() {
 		s.sent[i].Store(sent / 2)
 		s.success[i].Store(succ / 2)
 
-		if sent < carrierMinSamples || float64(succ) >= carrierMinSuccessRate*float64(sent) {
-			next = append(next, i)
+		keep := sent < carrierMinSamples || float64(succ) >= carrierMinSuccessRate*float64(sent)
+		if keep {
+			// Bayesian smoothing avoids promoting a carrier that has one lucky
+			// reply. Until enough samples arrive, all carriers retain equal
+			// exploration weight.
+			score := 1.0
+			if sent >= carrierMinSamples {
+				delivery := float64(succ+3) / float64(sent+6)
+				rtt := time.Duration(s.rttEWMA[i].Load())
+				if rtt < carrierRTTFloor {
+					rtt = carrierRTTFloor
+				}
+				score = delivery / float64(rtt)
+			}
+			scores = append(scores, carrierScore{index: i, score: score, keep: true})
+			if score > bestScore {
+				bestScore = score
+			}
 		}
 		if sent > 0 {
 			if rate := float64(succ) / float64(sent); rate > bestRate {
@@ -181,10 +230,22 @@ func (s *carrierSelector) evalLocked() {
 			}
 		}
 	}
-	if len(next) == 0 {
+	if len(scores) == 0 {
 		// Never leave the rotation empty: keep the best-performing carrier so the
 		// tunnel always has a carrier to send on.
 		next = []int{bestIdx}
+	} else {
+		for _, candidate := range scores {
+			weight := 1
+			if bestScore > 0 && candidate.score < 1 {
+				// A mature score is in duration^-1 units; only use preference after
+				// the warm-up value has been replaced by a measured one.
+				weight = max(1, min(carrierMaxWeight, int(candidate.score/bestScore*float64(carrierMaxWeight)+0.5)))
+			}
+			for copies := 0; copies < weight; copies++ {
+				next = append(next, candidate.index)
+			}
+		}
 	}
 	s.active.Store(&next)
 }

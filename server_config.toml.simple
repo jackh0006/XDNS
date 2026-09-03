@@ -185,7 +185,7 @@ MAX_INGRESS_QUEUE_BYTES = 67108864
 SOCKET_BUFFER_SIZE = 8388608
 
 # Maximum packet buffer size allocated by the server packet pool.
-# Cotten uploads ride in DNS QNAMEs (maximum 255-byte wire name); 4 KiB leaves
+# XDNS uploads ride in DNS QNAMEs (maximum 255-byte wire name); 4 KiB leaves
 # ample room for DNS headers and EDNS while keeping every queue slot bounded.
 # Older configs containing 65535 are safely clamped to 4096 at startup.
 MAX_PACKET_SIZE = 4096

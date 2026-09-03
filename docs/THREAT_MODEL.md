@@ -35,6 +35,7 @@ some brittle fingerprints, but are not guarantees.
 | Continuity during loss or resolver failure | `survival` preset and multiple independently configured tunnel domains | More redundancy can reduce effective throughput. |
 | Networks that fingerprint plain DNS | Test DoT or DoH explicitly, one network at a time | These transports can themselves be blocked or stand out. |
 | Reduce correlated failures | Configure independent resolvers/domains and retain default domain-diverse duplication | More endpoints increase operational complexity and metadata exposure. |
+| Prefer valid resolver paths | Keep several resolvers configured; XDNS measures per-path response quality and per-record-type delivery/latency | A score is local and time-dependent; it cannot predict a future block or guarantee a public resolver will carry tunnels. |
 
 ## Evidence and boundaries
 

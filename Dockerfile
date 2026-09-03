@@ -21,7 +21,7 @@ COPY --from=build /out/XDNS-server /usr/local/bin/XDNS-server
 RUN setcap 'cap_net_bind_service=+ep' /usr/local/bin/XDNS-server
 COPY server_config.toml.simple /opt/XDNS/server_config.toml.simple
 COPY docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
-RUN chmod 0755 /usr/local/bin/docker-entrypoint.sh && chown -R XDNS:XDNS /data
+RUN chmod 0755 /usr/local/bin/docker-entrypoint.sh && chown -R xdns:xdns /data
 EXPOSE 53/udp 53/tcp 9090/tcp
 VOLUME ["/data"]
 HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 CMD wget -qO- http://127.0.0.1:9090/healthz || exit 1

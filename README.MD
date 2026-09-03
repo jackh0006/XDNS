@@ -463,7 +463,7 @@ descriptors, and network capacity have headroom.
 
 Docker is an alternative to the systemd server installation in Steps 2 and 3.
 The supported image is published from this repository to
-`ghcr.io/whitedns/xdns-server` for AMD64 and ARM64 Linux. It runs the
+`ghcr.io/jackh0006/xdns-server` for AMD64 and ARM64 Linux. It runs the
 XDNS process as a non-root user, persists the configuration and encryption
 key under `/data`, and includes the same local health endpoint as the native
 service.

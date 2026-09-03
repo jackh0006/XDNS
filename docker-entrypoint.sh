@@ -2,10 +2,10 @@
 set -eu
 
 config_path="${XDNS_CONFIG:-/data/server_config.toml}"
-chown -R XDNS:XDNS /data
+chown -R xdns:xdns /data
 if [ ! -f "$config_path" ]; then
     cp /opt/XDNS/server_config.toml.simple "$config_path"
-	chown XDNS:XDNS "$config_path"
+	chown xdns:xdns "$config_path"
 fi
 
 if [ -n "${XDNS_DOMAIN:-}" ]; then

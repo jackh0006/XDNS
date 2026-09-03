@@ -191,6 +191,7 @@ Options:
   -l, --local               Local/offline install: use the server binary and
                             config found in the current directory (or dist/).
                             No download from GitHub is performed.
+      --install-dir <PATH>  Installation directory (default: /opt/XDNS).
   -u, --uninstall           Uninstall XDNS: stop and remove the systemd
                             service, drop kernel/limit tunings, and clean up
                             binaries and config files in the install directory.
@@ -205,6 +206,9 @@ Examples:
 
   # Install a specific release version:
   bash <(curl -Ls https://raw.githubusercontent.com/jackh0006/XDNS/main/server_linux_install.sh) --version v1.2.3
+
+  # Install somewhere other than /opt/XDNS:
+  bash <(curl -Ls https://raw.githubusercontent.com/jackh0006/XDNS/main/server_linux_install.sh) --install-dir /srv/xdns
 
   # Upgrade an existing server in one command:
   bash <(curl -Ls https://raw.githubusercontent.com/jackh0006/XDNS/main/server_linux_install.sh) --upgrade
@@ -221,6 +225,7 @@ USAGE
 ACTION="install"
 TARGET_VERSION=""
 LOCAL_MODE=0
+INSTALL_DIR="${XDNS_INSTALL_DIR:-/opt/XDNS}"
 while [[ $# -gt 0 ]]; do
   case "$1" in
     -v|--version)
@@ -238,6 +243,16 @@ while [[ $# -gt 0 ]]; do
       ;;
     --upgrade)
       ACTION="upgrade"
+      shift
+      ;;
+    --install-dir)
+      [[ $# -ge 2 && -n "$2" ]] || { echo "Error: --install-dir requires a path" >&2; print_usage; exit 2; }
+      INSTALL_DIR="$2"
+      shift 2
+      ;;
+    --install-dir=*)
+      INSTALL_DIR="${1#*=}"
+      [[ -n "$INSTALL_DIR" ]] || { echo "Error: --install-dir requires a path" >&2; print_usage; exit 2; }
       shift
       ;;
     -l|--local)
@@ -284,11 +299,6 @@ if [[ "${EUID}" -ne 0 ]]; then
   log_error "Run this script as root (sudo)."
 fi
 
-INSTALL_DIR="$(pwd -P)"
-[[ -n "${PWD:-}" ]] && INSTALL_DIR="$PWD"
-if [[ "$INSTALL_DIR" == /dev/fd* || "$INSTALL_DIR" == /proc/*/fd* ]]; then
-  INSTALL_DIR="$(pwd -P)"
-fi
 if [[ "$ACTION" == "upgrade" ]]; then
   EXISTING_SERVICE_FILE="$(systemctl show XDNS.service --property FragmentPath --value 2>/dev/null || true)"
   [[ -f "$EXISTING_SERVICE_FILE" ]] || log_error "No existing XDNS systemd installation was found."
@@ -299,6 +309,7 @@ if [[ "$ACTION" == "upgrade" ]]; then
   [[ -f "$EXISTING_EXECUTABLE" ]] || log_error "Existing executable not found at $EXISTING_EXECUTABLE."
 fi
 log_info "Installation directory: $INSTALL_DIR"
+mkdir -p "$INSTALL_DIR" || log_error "Cannot create installation directory: $INSTALL_DIR"
 cd "$INSTALL_DIR" || log_error "Cannot access install directory: $INSTALL_DIR"
 
 if [[ -f /etc/os-release ]]; then

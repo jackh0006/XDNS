@@ -606,10 +606,16 @@ Open [Releases](https://github.com/jackh0006/XDNS/releases/latest) and choose th
 | Platform | Typical archive |
 | --- | --- |
 | Windows 64-bit | `XDNS_Client_Windows_AMD64.zip` |
+| Windows 32-bit | `XDNS_Client_Windows_X86.zip` |
+| Windows ARM64 | `XDNS_Client_Windows_ARM64.zip` |
 | Linux x86-64 | `XDNS_Client_Linux_AMD64.tar.gz` or `.zip` |
+| Linux x86 (32-bit) | `XDNS_Client_Linux_X86.tar.gz` or `.zip` |
 | Linux ARM64 | `XDNS_Client_Linux_ARM64.tar.gz` or `.zip` |
-| macOS Apple Silicon | `XDNS_Client_Darwin_ARM64.tar.gz` or `.zip` |
-| macOS Intel | `XDNS_Client_Darwin_AMD64.tar.gz` or `.zip` |
+| Linux ARMv5 / ARMv6 / ARMv7 | Matching `XDNS_Client_Linux_ARMV*.tar.gz` or `.zip` |
+| Linux MIPS / MIPSLE / MIPS64 / MIPS64LE / RISC-V 64 | Matching `XDNS_Client_Linux_*.tar.gz` or `.zip` |
+| macOS Apple Silicon | `XDNS_Client_MacOS_ARM64.tar.gz` or `.zip` |
+| macOS Intel | `XDNS_Client_MacOS_AMD64.tar.gz` or `.zip` |
+| Termux on 64-bit Android | `XDNS_Client_Linux_ARM64.tar.gz` |
 
 Keep the executable, `client_config.toml`, and `client_resolvers.txt` in the same directory. Configuration paths are resolved relative to the executable unless an explicit path is provided.
 
@@ -662,6 +668,25 @@ Windows PowerShell:
 ```powershell
 .\XDNS_Client_Windows_AMD64_vVERSION.exe --config .\client_config.toml
 ```
+
+### Termux (Android ARM64)
+
+Termux runs a Linux-compatible userspace on Android. Download the static
+Linux ARM64 client from the same release, then run it inside Termux:
+
+```sh
+pkg update && pkg install -y curl tar
+curl -fL -o xdns-client.tar.gz \
+  https://github.com/jackh0006/XDNS/releases/latest/download/XDNS_Client_Linux_ARM64.tar.gz
+mkdir -p "$HOME/xdns" && tar -xzf xdns-client.tar.gz -C "$HOME/xdns"
+cd "$HOME/xdns"
+chmod +x XDNS_Client_Linux_ARM64_*
+./XDNS_Client_Linux_ARM64_* --config ./client_config.toml
+```
+
+Android may suspend background Termux processes under battery restrictions.
+Keep the session active or use an Android application integration when
+long-running background operation is required.
 
 During the first run, XDNS measures resolver reachability, MTU, latency, loss, and available UDP/TCP paths. A resolver does not enter the active pool merely because it answers ordinary DNS; it must pass tunnel validation.
 
@@ -834,15 +859,13 @@ top -p "$pid"
 
 ## Android and engine embedding
 
-The Go networking engine is kept in this repository. Android applications can pin XDNS as a Git submodule or CI dependency and build the engine without copying it into the app repository.
-
-Known-good engine commit:
-
-```text
-8eea49d1267b1a41441c25c75e69e6f12ad0a11f
-```
-
-The engine has been cross-compiled with CGO disabled for Android arm64, armv7, amd64, and 386. The Android wrapper should preserve the recommended defaults or pass equivalent TOML values.
+The Go networking engine is kept in this repository. Android applications can
+pin a reviewed XDNS release tag or commit as a Git submodule or CI dependency
+and build the engine without copying it into the app repository. Native Android
+engine builds require the Android NDK and are covered by
+[the Android integration guide](docs/ANDROID_ENGINE_INTEGRATION.md); they are
+not APKs and should be packaged, signed, and lifecycle-managed by the consuming
+Android application.
 
 Example submodule update:
 
@@ -850,7 +873,7 @@ Example submodule update:
 git submodule update --init --recursive
 cd path/to/XDNS
 git fetch origin
-git checkout 8eea49d1267b1a41441c25c75e69e6f12ad0a11f
+git checkout <reviewed-XDNS-release-tag-or-commit>
 cd ..
 git add path/to/XDNS
 git commit -m "Update XDNS engine"

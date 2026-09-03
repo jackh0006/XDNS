@@ -469,11 +469,18 @@ cleanup() {
   if [[ -n "${DOWNLOAD_DIR:-}" && -d "${DOWNLOAD_DIR:-}" ]]; then
     rm -rf "$DOWNLOAD_DIR" 2>/dev/null || true
   fi
-  if [[ "$ACTION" == "upgrade" && "${UPGRADE_COMPLETED:-false}" != true ]]; then
-    if [[ -f "$INSTALL_DIR/server_config.toml.backup" ]]; then
-      [[ -f "$INSTALL_DIR/server_config.toml" ]] && mv -f "$INSTALL_DIR/server_config.toml" "$INSTALL_DIR/server_config.toml.failed-upgrade"
-      mv -f "$INSTALL_DIR/server_config.toml.backup" "$INSTALL_DIR/server_config.toml"
+  # A failed download or initialization must never strand the configuration that
+  # existed before this run. This applies to a first install as well as an
+  # explicit --upgrade: both paths move an existing config aside before the
+  # replacement archive is known-good.
+  if [[ "${UPGRADE_COMPLETED:-false}" != true && -f "$INSTALL_DIR/server_config.toml.backup" ]]; then
+    if [[ -f "$INSTALL_DIR/server_config.toml" ]]; then
+      mv -f "$INSTALL_DIR/server_config.toml" "$INSTALL_DIR/server_config.toml.failed-install.$(date +%Y%m%d_%H%M%S)"
     fi
+    mv -f "$INSTALL_DIR/server_config.toml.backup" "$INSTALL_DIR/server_config.toml"
+    log_warn "Installation did not complete; restored the previous server configuration."
+  fi
+  if [[ "$ACTION" == "upgrade" && "${UPGRADE_COMPLETED:-false}" != true ]]; then
     systemctl daemon-reload >/dev/null 2>&1 || true
     systemctl restart XDNS >/dev/null 2>&1 || true
   fi

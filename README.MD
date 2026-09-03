@@ -88,6 +88,35 @@ XDNS stands on the work of three projects and their maintainers:
 
 Their work deserves full credit. XDNS is an independent derivative, not a claim that the underlying architecture began here. The full MIT license lineage is preserved in [LICENSE](LICENSE).
 
+## What XDNS adds and improves
+
+XDNS is intentionally compatible with the MasterDNS protocol family. This is
+not a claim that every capability originated here: CottenDNS is the direct
+functional base, and the complete technical rationale is documented in
+[Engineering changes](docs/ENGINEERING_CHANGES.md). The comparison below
+separates the lineage honestly.
+
+| Area | MasterDnsVPN / StormDNS baseline | CottenDNS contribution inherited by XDNS | XDNS change |
+| --- | --- | --- | --- |
+| Wire compatibility | Original DNS-tunnel framing and ARQ foundation | Compatibility retained while expanding supported transports and server behavior | Byte-level MasterDNS conformance tests remain part of XDNS validation. |
+| Path reliability | Resolver balancing and retransmission foundation | Per-resolver health, adaptive duplication, FEC, replay, MTU discovery, and path control | Duplicate packets prefer distinct configured domains by default, where available. This adds no copies or traffic; it makes existing redundancy less likely to share a single domain failure. |
+| DNS carriers | Traditional DNS tunnel transport | UDP/TCP DNS, DoT, DoH, IPv6, and matching DNS record channels | Same transport capability, maintained under an independent XDNS release line. |
+| Public-server operation | Basic tunnel deployment | Health/metrics, admission limits, fairness, container deployment, installers, and configuration presets | Repository-owned Quick Install, release URLs, CI, and package naming point to XDNS. |
+
+### Default domain-diverse reliability
+
+When packet duplication is enabled and two or more tunnel domains are
+configured, XDNS defaults `DUPLICATION_PREFER_DISTINCT_DOMAINS = true`.
+The selector first tries to place copies on different domains, then falls back
+to the healthiest available paths. A single-domain deployment is unchanged,
+and the setting does not increase the duplication count or bandwidth by itself.
+It simply avoids spending duplicate packets on the same domain failure domain
+when independent domains exist.
+
+This is a default, not a new wire protocol: set it to `false` to retain the
+historical resolver-only preference. Avoid treating it as a magic speed switch;
+the benefit is resilience against correlated domain or resolver failures.
+
 ## What XDNS does
 
 XDNS carries application traffic inside DNS queries and responses:

@@ -1,0 +1,19 @@
+name: Feature request
+description: Propose an evidence-backed improvement.
+title: "feature: "
+labels: [enhancement]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem and network conditions
+      description: Describe the concrete failure mode, without sensitive deployment data.
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed behavior and trade-offs
+      description: Include compatibility, overhead, security, and reliability effects.
+    validations:
+      required: true

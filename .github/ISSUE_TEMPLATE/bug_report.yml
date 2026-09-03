@@ -1,0 +1,35 @@
+name: Bug report
+description: Report a reproducible XDNS defect without publishing secrets.
+title: "bug: "
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: "Do not include keys, live domains, server IPs, or identifying resolver lists. Use a private security report for vulnerabilities."
+  - type: input
+    id: version
+    attributes:
+      label: XDNS version and platform
+      placeholder: vYYYY...; Linux amd64
+    validations:
+      required: true
+  - type: dropdown
+    id: area
+    attributes:
+      label: Affected component
+      options: [Client, Server, Installer, Docker, Android engine, Documentation]
+    validations:
+      required: true
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: Minimal reproduction
+      description: Include redacted configuration and exact steps.
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected and actual behavior
+    validations:
+      required: true

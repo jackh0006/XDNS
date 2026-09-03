@@ -88,6 +88,8 @@ It exposes a local SOCKS5 proxy at `127.0.0.1:18000`. Press `Ctrl+C` to stop it.
 | Embed the engine in Android | [Android and engine embedding](#android-and-engine-embedding) |
 | Diagnose a failed or slow connection | [Troubleshooting](#troubleshooting) |
 | Review every configuration option | [Client](client_config.toml.simple) and [server](server_config.toml.simple) samples |
+| Understand security boundaries | [Threat model](docs/THREAT_MODEL.md) |
+| Report a problem or contribute safely | [Support](SUPPORT.md), [security](SECURITY.md), and [contributing](CONTRIBUTING.md) |
 
 ### At a glance
 
@@ -964,6 +966,13 @@ Keep `RESOLVER_TRANSPORT = "auto"`. The client should retain viable UDP and move
 Confirm `ENCRYPTION_AUTO_DETECT = true`, use the same encryption key, and do not enable server ceilings that reject the legacy client’s requested values.
 
 ## Documentation
+
+Project and community documents:
+
+- [Threat model and operating limits](docs/THREAT_MODEL.md)
+- [Security reporting and deployment baseline](SECURITY.md)
+- [Support and safe bug reports](SUPPORT.md)
+- [Contribution and compatibility guidance](CONTRIBUTING.md)
 
 | Document | Purpose |
 | --- | --- |

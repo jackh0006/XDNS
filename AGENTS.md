@@ -73,3 +73,19 @@ No linter/formatter config beyond `go vet`. No task runner, Makefile, or pre-com
 
 - Server: `server_linux_install.sh` (systemd service, firewall, kernel tuning, key gen)
 - Client: `client_linux_install.sh` (systemd service)
+## Hardening rules (account standard, 2026-10-09)
+
+1. **Keep MIT + attribution.** `LICENSE` carries the MasterDnsVPN →
+   StormDNS → CottenDNS → XDNS chain. Never drop a credit line; no
+   license change without the owner's explicit sign-off.
+2. **No secrets in repo.** No keys, real server addresses, client configs.
+   Tests use loopback fixtures only.
+3. **Honest censorship language.** Shaping raises blocking cost; DNS tunnels
+   stay fingerprintable by traffic shape. Never `unhackable / invisible /
+   NSA-proof`. `docs/THREAT_MODEL.md` is the source of truth.
+4. **Fail closed.** Bounded queues, admission checks, auth before service —
+   never degrade to open relays or unauthenticated modes silently.
+5. **Version-proof texts.** Stable install URLs; no hardcoded versions in
+   README/docs (tag scheme changes only by owner decision).
+6. **Releases only by tag** via workflows with `SHA256SUMS.txt`; never
+   rewrite published assets.

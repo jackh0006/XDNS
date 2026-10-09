@@ -1,0 +1,31 @@
+# SPDX-License-Identifier: MIT
+name: Strict boundary
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  strict:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Secret scan
+        run: |
+          grep -rn --exclude-dir=.git -E 'BEGIN (RSA |OPENSSH |EC )?PRIVATE KEY' . --include='*.go' --include='*.md' --include='*.sh' --include='*.toml' --include='*.yaml' --include='*.yml' && { echo "private key material forbidden"; exit 1; }
+          grep -rniE 'ghp_[A-Za-z0-9]{20,}|gho_[A-Za-z0-9]{20,}' . --exclude-dir=.git && { echo "token forbidden"; exit 1; }
+          echo "secrets: none found OK"
+      - name: License attribution intact
+        run: |
+          grep -q 'Amin Mahmoudi' LICENSE || { echo "upstream credit missing"; exit 1; }
+          grep -q 'MIT License' LICENSE || { echo "MIT terms missing"; exit 1; }
+          echo "license chain: OK"
+      - name: No unverifiable claims (AGENTS.md documents the banlist, excluded)
+        run: |
+          grep -rin 'unhackable\|NSA-proof\|zero bugs\|fully undetectable\|guaranteed anonymous\|100% anonymous\|invisible to censors' README.MD SECURITY.md PRIVACY.md docs/ cmd/ internal/ 2>/dev/null | grep -vi 'never\|no \|not \|raises\|honest\|fingerprint' && { echo "hype claim forbidden"; exit 1; }
+          echo "claims: honest OK"

@@ -183,6 +183,21 @@ The built-in SOCKS5 server supports normal TCP proxying and generic UDP associat
 | DPI fingerprints repetitive DNS | Rotate record types, reshape QNAME labels, randomize IDs/cookies, and optionally use DoT/DoH |
 | Server load spikes | Bounded queues, admission checks, connection budgets, and work-conserving fairness |
 
+### 🌐 XDNS vs alternatives — scoreboard
+
+Same goal (usable internet under censorship), reproducible. Legend: ✅ yes · ❌ no · 🔶 partial.
+
+| Need (your words) | XDNS | Plain DNS tunnel | Ordinary VPN | How we prove it |
+| --- | :---: | :---: | :---: | --- |
+| 🌐 Works when only DNS is open | ✅ DNS carrier | ✅ | ❌ blocked | `internal/client/mtu.go`, resolver scoring |
+| ⚡ Speed-first on lossy paths | ✅ ARQ + FEC + striping | 🔶 | 🔶 clean-net fast | `scripts/bench/bench.go` measurements |
+| 🕵️ DPI shaping (QNAME/ID/DoT/DoH) | ✅ | ❌ | 🔶 | `docs/ENGINEERING_CHANGES.md` |
+| 🖥️ Client + server matrix | ✅ per-OS/arch assets | 🔶 | ✅ | Release assets + `SHA256SUMS.txt` |
+| 🙈 Invisible to censors | ❌ raises cost only | ❌ | ❌ | `docs/THREAT_MODEL.md` — stated limits |
+| 🔍 Independent audit | 🔶 open, needs audit | — | ✅ big ones | `SECURITY.md` |
+
+What only it does: per-`(resolver, transport)` scoring with directional evidence, MTU-aware routing, and Super-FEC tuned for ~250 B DNS payloads. What you need: a domain + VPS for the server side, realistic expectations (DNS tunneling is slower than VPNs — see note at top). No hype — see `docs/THREAT_MODEL.md`.
+
 ## Automatic behavior
 
 The recommended defaults enable the smart client controller:
